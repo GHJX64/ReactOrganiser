@@ -220,5 +220,194 @@ export const copyToClipboard = (textToCopy)=>{
     return navigator.clipboard.writeText(textToCopy);
   } else {
     // text area method 
+    let textArea = document.createElement('textarea');
+    textArea.value = textToCopy;
+    // make the textarea out of viewport
+    textArea.style.position = 'absolute';
+    textArea.style.left = '-9999999px';
+    textArea.style.top = '-9999999px';
+    textArea.style.opacity = 0;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    return new Promise((res, rej) => {
+      document.execCommand('copy') ? res() : rej();
+      textArea.remove();
+    });
   }
+}
+
+const isObject = (obj) => {
+  return !isEmpty(obj) && typeof obj === 'object';
+}
+
+/**
+ * Checks wheather *obj1* and *obj2* are the same object with the same key-value pairs (nested). A simple obj1 === obj2 will always return *false*.
+ * @param obj1 The first object to compare
+ * @param obj2 The second object to compare
+ */
+export const isEqualObjects = (obj1, obj2) => {
+  if (isEmpty(obj1) || isEmpty(obj2)) {
+    return JSON.stringify(obj1) === JSON.stringify(obj2);
+  }
+
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  return keys1.every((key) => {
+    const val1 = obj1[key]
+    const val2 = obj2[key]
+    const areObjects = isObject(val1) && isObject(val2);
+    if ((areObjects && !isEqualObjects(val1, val2)) || (!areObjects && val1 !== val2)) {
+      return false;
+    }
+
+    return true;
+  })
+}
+
+/**
+ * Generates a random array of integers
+ * @param size The length of the array
+ * @param min The min value
+ * @param max The max value
+ */
+export const generateRandomArray = (size, min, max) => {
+  return Array.from({ length: size }, () => Math.floor(Math.random() * (max - min) + min));
+}
+
+/**
+ * Generates a random number in the range (min and max includes)
+ * @param min The min value
+ * @param max The max value
+ */
+export const generateRandomIntFromInterval = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+/**
+ * Animate the number to count from *start* to *end* based on the *duration*.
+ * @param id The id string name for the element rendered.
+ * @param value The value after the animation ends.
+ * @param duration The duration of the animation (in milliseconds).
+ */
+export const animateValue = (id, value, duration) => {
+  const obj = document.getElementById(id);
+  const range = value - 0;
+  const minTimer = 50;
+  let stepTime = Math.abs(Math.floor(duration / range));
+  stepTime = Math.max(stepTime, minTimer);
+
+  const startTime = new Date().getTime();
+  const endTime = startTime + duration;
+
+  const run = () => {
+    const now = new Date().getTime();
+    const remaining = Math.max((endTime - now) / duration, 0);
+    const counter = Math.round(value - (remaining * range));
+    obj.innerHTML = counter;
+    if (counter === value) clearInterval(timer);
+  }
+
+  const timer = setInterval(run, stepTime);
+  run()
+}
+
+/**
+ * Adds a red color asterisk to text
+ * @param text The Input Text
+ * @param asteriskColor The asterisk color (Defualt = Red)
+ */
+export const createTextWithAsterisk = (text, asteriskColor = "red") => {
+  return (
+    <Grid>
+      <span style={{ color: asteriskColor }}>*</span>
+      <span>{` ${text}`}</span>
+    </Grid>
+  )
+}
+
+/**
+ * Remote the key from the object
+ * @param object The object to have it's key removed
+ * @param key The key to remove from object
+ */
+export const removeKey = (object, keyRemove) => {
+  const removeProp = keyRemove;
+  const { [removeProp]: remove, ...objectRest } = object;
+  return objectRest;
+}
+
+/**
+ * Wait for indicated *ms* before proceeding with the code. E.g. Usage: "await wait(1000)"
+ * @param ms Wait Duration in Milliseconds.
+ */
+export const wait = (ms) => {
+  return new Promise((resolve) => { setTimeout(resolve, ms) })
+}
+
+/**
+ * Compare with both *array1* and *array2* are equal / similar (objects - reference types)
+ * @param array1 The first array to be compared
+ * @param array2 The second array to be compared
+ */
+export const compareArraysOfObjects = (array1, array2) => {
+  return array1.length === array2.length && array1.every((value, index) => isEqualObjects(value, array2[index]))
+}
+
+/**
+ * Compare with both *array1* and *array2* are equal / similar (non objects - primitive types)
+ * @param array1 The first array to be compared
+ * @param array2 The second array to be compared
+ */
+export const compareArrays = (array1, array2) => {
+  return array1.length === array2.length && array1.every((value, index) => value === array2[index])
+}
+
+/**
+ * Convert string/int numbers that are greate than 1000 with comma (i.e. 1000 -> 1,000 ; 1000000 -> 1,000,000)
+ * @param value The string/int numbers
+ */
+export const numbersAddCommas = (value) => {
+  return parseInt(value).toLocaleString('en-US');
+}
+
+/**
+ * Check if @param dateCheck is between @param dateFrom and @param dateTo
+ * 
+ * @param {String} dateFrom YYYY-MM-DD (E.g. "2022-08-19")
+ * @param {String} dateTo YYYY-MM-DD (E.g. "2022-08-29")
+ * @param {String} dateCheck YYYY-MM-DD (E.g. "2022-08-21")
+ * @returns {Boolean}
+ */
+export const checkDateIsBetween = (dateFrom, dateTo, dateCheck) => {
+  if (dateFrom && dateTo && dateCheck) {
+    let d1 = dateFrom.split("-")
+    let d2 = dateTo.split("-")
+    let c = dateCheck.split("-")
+
+    let from = new Date(d1[0], parseInt(d1[1] - 1), d1[2])
+    let to = new Date(d2[0], parseInt(d2[1] - 1), d2[2])
+    let check = new Date(c[0], parseInt(c[1] - 1), c[2])
+
+    return (check > from && check < to)
+  }
+  return false;
+}
+
+/**
+ * Capitaliza all of the first letter in a *text*. e.g. THIS IS A TEXT => This Is A Test
+ * @param text The text to capitalize on the first letter. e.g. THIS IS A TEST
+ */
+export const capitalizeFirstLetter = (text) => {
+  if (text.includes(' ')) {
+    const textSplit = text.split(' ');
+    const result = textSplit.map(x => capitalizeFirstLetter(x));
+    return result.join(' ')
+  }
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
